@@ -4,4 +4,4 @@
 
 General extensions to the Go language, requiring generics.
 
-For now, the most _simply_, most _obvious_ and most _useful_ generics utilities.
+For now, the most _simple_, most _obvious_ and most _useful_ generics utilities.
