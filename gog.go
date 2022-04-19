@@ -1,7 +1,6 @@
 package gog
 
 // If returns vtrue if cond is true, vfalse otherwise.
-//
 func If[T any](cond bool, vtrue, vfalse T) T {
 	if cond {
 		return vtrue
