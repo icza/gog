@@ -68,20 +68,20 @@ func manyResults() (i, j, k int, s string, f float64) {
 
 func TestFirst(t *testing.T) {
 	exp, got := 1, First(manyResults())
-	if got != 1 {
+	if got != exp {
 		t.Errorf("Expected %d, got: %d", exp, got)
 	}
 }
 
 func TestSecond(t *testing.T) {
-	exp, got := 2, First(manyResults())
-	if got != 1 {
+	exp, got := 2, Second(manyResults())
+	if got != exp {
 		t.Errorf("Expected %d, got: %d", exp, got)
 	}
 }
 func TestThird(t *testing.T) {
-	exp, got := 3, First(manyResults())
-	if got != 1 {
+	exp, got := 3, Third(manyResults())
+	if got != exp {
 		t.Errorf("Expected %d, got: %d", exp, got)
 	}
 }
