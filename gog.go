@@ -1,3 +1,9 @@
+/*
+
+Package gog contains general, generic extensions to the Go language,
+requiring generics (introduced in Go 1.18).
+
+*/
 package gog
 
 // If returns vtrue if cond is true, vfalse otherwise.
