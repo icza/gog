@@ -1,6 +1,9 @@
 package gog
 
 // If returns vtrue if cond is true, vfalse otherwise.
+//
+// Useful to avoid an if statement when initializing variables, for example:
+//   min := If(i > 0, i, 0)
 func If[T any](cond bool, vtrue, vfalse T) T {
 	if cond {
 		return vtrue
@@ -9,12 +12,25 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 }
 
 // Ptr returns a pointer to the passed value.
+//
+// Useful when you have a value and need a pointer, e.g.:
+//   func f() string { return "foo" }
+//   resp := struct{
+//       Foo *string
+//   }{
+//       Foo: Ptr(f()),
+//   }
 func Ptr[T any](v T) *T {
 	return &v
 }
 
 // Must takes 2 arguments, the second being an error.
 // If err is not nil, Must panics. Else the first argument is returned.
+//
+// Useful when inputs to some function are provided in the source code,
+// and you are sure they are valid (if not, it's OK to panic).
+// For example:
+//   t := Must(time.Parse("2006-01-02", "2022-04-20"))
 func Must[T any](v T, err error) T {
 	if err != nil {
 		panic(err)
