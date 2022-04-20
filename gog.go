@@ -21,10 +21,11 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 //
 // Useful when you have a value and need a pointer, e.g.:
 //   func f() string { return "foo" }
-//   resp := struct{
-//       Foo *string
+//
+//   foo := struct{
+//       Bar *string
 //   }{
-//       Foo: Ptr(f()),
+//       Bar: Ptr(f()),
 //   }
 func Ptr[T any](v T) *T {
 	return &v
@@ -50,6 +51,7 @@ func Must[T any](v T, err error) T {
 //
 // For example:
 //   func f() (i, j, k int, s string, f float64) { return }
+//
 //   p := image.Point{
 //       X: First(f()),
 //   }
@@ -63,6 +65,7 @@ func First[T any](first T, _ ...any) T {
 //
 // For example:
 //   func f() (i, j, k int, s string, f float64) { return }
+//
 //   p := image.Point{
 //       X: Second(f()),
 //   }
@@ -76,6 +79,7 @@ func Second[T any](_ any, second T, _ ...any) T {
 //
 // For example:
 //   func f() (i, j, k int, s string, f float64) { return }
+//
 //   p := image.Point{
 //       X: Third(f()),
 //   }
