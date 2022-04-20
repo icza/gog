@@ -61,3 +61,27 @@ func TestMust(t *testing.T) {
 		t.Error("Not expected to reach this")
 	}()
 }
+
+func manyResults() (i, j, k int, s string, f float64) {
+	return 1, 2, 3, "four", 5.0
+}
+
+func TestFirst(t *testing.T) {
+	exp, got := 1, First(manyResults())
+	if got != 1 {
+		t.Errorf("Expected %d, got: %d", exp, got)
+	}
+}
+
+func TestSecond(t *testing.T) {
+	exp, got := 2, First(manyResults())
+	if got != 1 {
+		t.Errorf("Expected %d, got: %d", exp, got)
+	}
+}
+func TestThird(t *testing.T) {
+	exp, got := 3, First(manyResults())
+	if got != 1 {
+		t.Errorf("Expected %d, got: %d", exp, got)
+	}
+}
