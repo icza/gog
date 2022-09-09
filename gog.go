@@ -1,15 +1,14 @@
 /*
-
 Package gog contains general, generic extensions to the Go language,
 requiring generics (introduced in Go 1.18).
-
 */
 package gog
 
 // If returns vtrue if cond is true, vfalse otherwise.
 //
 // Useful to avoid an if statement when initializing variables, for example:
-//   min := If(i > 0, i, 0)
+//
+//	min := If(i > 0, i, 0)
 func If[T any](cond bool, vtrue, vfalse T) T {
 	if cond {
 		return vtrue
@@ -20,13 +19,14 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 // Ptr returns a pointer to the passed value.
 //
 // Useful when you have a value and need a pointer, e.g.:
-//   func f() string { return "foo" }
 //
-//   foo := struct{
-//       Bar *string
-//   }{
-//       Bar: Ptr(f()),
-//   }
+//	func f() string { return "foo" }
+//
+//	foo := struct{
+//	    Bar *string
+//	}{
+//	    Bar: Ptr(f()),
+//	}
 func Ptr[T any](v T) *T {
 	return &v
 }
@@ -37,7 +37,8 @@ func Ptr[T any](v T) *T {
 // Useful when inputs to some function are provided in the source code,
 // and you are sure they are valid (if not, it's OK to panic).
 // For example:
-//   t := Must(time.Parse("2006-01-02", "2022-04-20"))
+//
+//	t := Must(time.Parse("2006-01-02", "2022-04-20"))
 func Must[T any](v T, err error) T {
 	if err != nil {
 		panic(err)
@@ -50,11 +51,12 @@ func Must[T any](v T, err error) T {
 // (e.g. in a composite literal or in a condition).
 //
 // For example:
-//   func f() (i, j, k int, s string, f float64) { return }
 //
-//   p := image.Point{
-//       X: First(f()),
-//   }
+//	func f() (i, j, k int, s string, f float64) { return }
+//
+//	p := image.Point{
+//	    X: First(f()),
+//	}
 func First[T any](first T, _ ...any) T {
 	return first
 }
@@ -64,11 +66,12 @@ func First[T any](first T, _ ...any) T {
 // (e.g. in a composite literal or in a condition).
 //
 // For example:
-//   func f() (i, j, k int, s string, f float64) { return }
 //
-//   p := image.Point{
-//       X: Second(f()),
-//   }
+//	func f() (i, j, k int, s string, f float64) { return }
+//
+//	p := image.Point{
+//	    X: Second(f()),
+//	}
 func Second[T any](_ any, second T, _ ...any) T {
 	return second
 }
@@ -78,11 +81,12 @@ func Second[T any](_ any, second T, _ ...any) T {
 // (e.g. in a composite literal or in a condition).
 //
 // For example:
-//   func f() (i, j, k int, s string, f float64) { return }
 //
-//   p := image.Point{
-//       X: Third(f()),
-//   }
+//	func f() (i, j, k int, s string, f float64) { return }
+//
+//	p := image.Point{
+//	    X: Third(f()),
+//	}
 func Third[T any](_, _ any, third T, _ ...any) T {
 	return third
 }
