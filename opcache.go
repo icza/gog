@@ -45,14 +45,6 @@ type OpCacheConfig struct {
 // Operations are captured by a function that returns a value of a certain type (T) and an error.
 // If an operation has multiple results beside the error, they must be wrapped in a struct or slice.
 // Operations are identified by a string key.
-//
-// Example: Let's say we have the following function or method we want to add caching for:
-//
-//	func GetPerson(age, height int) (*Person, error) { ... }
-//
-// Here's a wrapper that utilizes OpCache:
-//
-//	asdf
 type OpCache[T any] struct {
 	cfg OpCacheConfig
 
