@@ -2,6 +2,7 @@ package gog
 
 import (
 	"context"
+	"crypto/sha1"
 	"sync"
 	"time"
 )
@@ -103,6 +104,7 @@ func (oc *OpCache[T]) Get(
 	key string,
 	execOp func() (result T, err error),
 ) (result T, resultErr error) {
+	key = transformKey(key)
 
 	cachedResult := oc.getCachedOpResult(key)
 
@@ -148,6 +150,21 @@ func (oc *OpCache[T]) Get(
 	}()
 
 	return
+}
+
+// transformKey may arbitrarily transform long keys to short ones,
+// saving time when storing them in the internal map.
+//
+// Saving space is not the only aspect though as shortening requires computation.
+func transformKey(key string) string {
+	// Hash key using SHA-1 if it's very long
+	// to avoid storing long keys and also having to compare long keys in map lookups.
+	if len(key) > 100 { // Arbitrary limit, a compromize between space-time (SHA-1 byte size is 20)
+		checksum := sha1.Sum([]byte(key))
+		key = string(checksum[:]) // A valid UTF-8 string is not required
+	}
+
+	return key
 }
 
 // opResult holds the result of an operation.
