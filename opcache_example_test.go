@@ -7,7 +7,7 @@ import (
 	"github.com/icza/gog"
 )
 
-// ExampleOpCache demonstrates how to use OpCache to cache the results
+// This example demonstrates how to use OpCache to cache the results
 // of an existing function.
 func ExampleOpCache() {
 	type Point struct {
@@ -47,7 +47,7 @@ func ExampleOpCache() {
 	// &{X:1 Y:2 Counter:2} <nil>
 }
 
-// ExampleOpCache_multi_return demonstrates how to use OpCache to cache the results
+// This example demonstrates how to use OpCache to cache the results
 // of an existing function that has multiple result types (besides the error).
 func ExampleOpCache_multi_return() {
 	type Point struct {

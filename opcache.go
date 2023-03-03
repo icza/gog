@@ -41,10 +41,13 @@ type OpCacheConfig struct {
 
 // OpCache implements a general value cache.
 // It can be used to cache results of arbitrary operations.
+// Cached values are tied to a string key that should be derived from the operation's parameters.
+// Cached values have an expiration time and also a grace period during which the cached value
+// is considered valid, but getting a cached value during the grace period triggers a reload
+// that will happen in the background (the cached value is returned immediately, without waiting).
 //
 // Operations are captured by a function that returns a value of a certain type (T) and an error.
 // If an operation has multiple results beside the error, they must be wrapped in a struct or slice.
-// Operations are identified by a string key.
 type OpCache[T any] struct {
 	cfg OpCacheConfig
 
