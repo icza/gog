@@ -31,6 +31,47 @@ func TestIf(t *testing.T) {
 	}
 }
 
+func TestCoalesce(t *testing.T) {
+	emptyStruct := &struct{}{}
+
+	testCases := []struct {
+		name string
+		args []interface{}
+		want interface{}
+	}{
+		{
+			name: "All values are zero value",
+			args: []interface{}{nil, 0, false},
+			want: false,
+		},
+		{
+			name: "One value is not zero value",
+			args: []interface{}{nil, 0, "", "yo!", false},
+			want: "yo!",
+		},
+		{
+			name: "Multiple values are not zero values",
+			args: []interface{}{nil, 123, "yo!", 123, true},
+			want: 123,
+		},
+		{
+			name: "All values are non zero",
+			args: []interface{}{emptyStruct, true, 1, "yo!"},
+			want: emptyStruct,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := Coalesce(testCase.args...)
+
+			if got != testCase.want {
+				t.Errorf("want %v but got %v", testCase.want, got)
+			}
+		})
+	}
+}
+
 func TestPtr(t *testing.T) {
 	s := "a"
 	sp := Ptr(s)
@@ -79,6 +120,7 @@ func TestSecond(t *testing.T) {
 		t.Errorf("Expected %d, got: %d", exp, got)
 	}
 }
+
 func TestThird(t *testing.T) {
 	exp, got := 3, Third(manyResults())
 	if got != exp {
