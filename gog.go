@@ -93,7 +93,7 @@ func Third[T any](_, _ any, third T, _ ...any) T {
 
 // Coalesce returns the first non-zero value from listed arguments.
 // Returns the zero value of the type parameter if no arguments are given or all are the zero value.
-// Useful when you want to initialize a variable from a list of fallback values.
+// Useful when you want to initialize a variable to the first non-zero value from a list of fallback values.
 //
 // For example:
 //
