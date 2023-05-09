@@ -90,3 +90,20 @@ func Second[T any](_ any, second T, _ ...any) T {
 func Third[T any](_, _ any, third T, _ ...any) T {
 	return third
 }
+
+// Coalesce returns the first non-zero value from listed arguments.
+// Returns the zero value of the type parameter if no arguments are given or all are the zero value.
+// Useful when you want a chain of fallback options for your variable value.
+//
+// For example:
+//
+//	hostVal := Coalesce(hostName, os.Getenv("HOST"), "localhost")
+func Coalesce[T comparable](values ...T) (v T) {
+	var zero T
+	for _, v = range values {
+		if v != zero {
+			return
+		}
+	}
+	return
+}

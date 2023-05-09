@@ -85,3 +85,80 @@ func TestThird(t *testing.T) {
 		t.Errorf("Expected %d, got: %d", exp, got)
 	}
 }
+
+func TestCoalesce(t *testing.T) {
+	p1, p2 := Ptr(1), Ptr(2)
+
+	cases := []struct {
+		name     string
+		exp, got any
+	}{
+		{
+			"strings",
+			"1", Coalesce("", "1", "2"),
+		},
+		{
+			"strings first",
+			"1", Coalesce("1", "2", "3"),
+		},
+		{
+			"strings last",
+			"1", Coalesce("", "", "1"),
+		},
+		{
+			"strings all zero",
+			"", Coalesce("", "", ""),
+		},
+		{
+			"strings no args",
+			"", Coalesce[string](),
+		},
+		{
+			"ints",
+			1, Coalesce(0, 1, 2, 3),
+		},
+		{
+			"ints first",
+			1, Coalesce(1, 2, 3),
+		},
+		{
+			"ints last",
+			1, Coalesce(0, 0, 0, 0, 1),
+		},
+		{
+			"ints all zero",
+			0, Coalesce(0, 0, 0, 0),
+		},
+		{
+			"ints no args",
+			0, Coalesce[int](),
+		},
+		{
+			"pointers",
+			p1, Coalesce(nil, p1, p2),
+		},
+		{
+			"pointers first",
+			p1, Coalesce(p1, p2),
+		},
+		{
+			"pointers last",
+			p1, Coalesce(nil, nil, p1),
+		},
+		{
+			"pointers all zero",
+			(*int)(nil), Coalesce[*int](nil, nil, nil),
+		},
+		{
+			"pointers no args",
+			(*int)(nil), Coalesce[*int](),
+		},
+	}
+
+	for _, c := range cases {
+		if c.exp != c.got {
+			t.Errorf("[%s] Expected: %v, got: %v", c.name, c.exp, c.got)
+		}
+	}
+
+}
