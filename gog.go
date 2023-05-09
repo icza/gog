@@ -24,14 +24,14 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 //
 //	hostVal := Coalesce(hostName, os.Getenv("HOST"), "localhost")
 func Coalesce[T comparable](values ...T) T {
-	var v, zero T
-	for _, v = range values {
+	var zero T
+	for _, v := range values {
 		if v != zero {
-			break
+			return v
 		}
 	}
 
-	return v
+	return zero
 }
 
 // Ptr returns a pointer to the passed value.
