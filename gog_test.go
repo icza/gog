@@ -31,6 +31,21 @@ func TestIf(t *testing.T) {
 	}
 }
 
+func TestCoalesce(t *testing.T) {
+	if "" != Coalesce("", "", "") {
+		t.Errorf("All args are zero value")
+	}
+	if "stopHere" != Coalesce("", "stopHere", "") {
+		t.Errorf("One arg is not zero value")
+	}
+	if 123 != Coalesce(0, 0, 123, 432) {
+		t.Errorf("More args are not zero value")
+	}
+	if true != Coalesce(false, false, true) {
+		t.Errorf("Bool args are not zero value")
+	}
+}
+
 func TestPtr(t *testing.T) {
 	s := "a"
 	sp := Ptr(s)
