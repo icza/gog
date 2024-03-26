@@ -180,6 +180,10 @@ func TestDeref(t *testing.T) {
 			2, Deref[int](nil, 2),
 		},
 		{
+			"*int not needing default",
+			1, Deref[int](Ptr(1), 2),
+		},
+		{
 			"*string",
 			"1", Deref(Ptr("1")),
 		},
@@ -190,6 +194,10 @@ func TestDeref(t *testing.T) {
 		{
 			"*string default",
 			"2", Deref[string](nil, "2"),
+		},
+		{
+			"*string not needing default default",
+			"1", Deref[string](Ptr("1"), "2"),
 		},
 	}
 
