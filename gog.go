@@ -107,3 +107,16 @@ func Coalesce[T comparable](values ...T) (v T) {
 	}
 	return
 }
+
+// Deref "safely" dereferences a pointer, returns the pointed value.
+// If the pointer is nil, the (first) def is returned.
+// If def is not specified, the zero value of T is returned.
+func Deref[T any](p *T, def ...T) (result T) {
+	if p != nil {
+		return *p
+	}
+	if len(def) > 0 {
+		return def[0]
+	}
+	return
+}

@@ -160,5 +160,42 @@ func TestCoalesce(t *testing.T) {
 			t.Errorf("[%s] Expected: %v, got: %v", c.name, c.exp, c.got)
 		}
 	}
+}
 
+func TestDeref(t *testing.T) {
+	cases := []struct {
+		name     string
+		exp, got any
+	}{
+		{
+			"*int",
+			1, Deref(Ptr(1)),
+		},
+		{
+			"*int nil",
+			0, Deref[int](nil),
+		},
+		{
+			"*int default",
+			2, Deref[int](nil, 2),
+		},
+		{
+			"*string",
+			"1", Deref(Ptr("1")),
+		},
+		{
+			"*string nil",
+			"", Deref[string](nil),
+		},
+		{
+			"*string default",
+			"2", Deref[string](nil, "2"),
+		},
+	}
+
+	for _, c := range cases {
+		if c.exp != c.got {
+			t.Errorf("[%s] Expected: %v, got: %v", c.name, c.exp, c.got)
+		}
+	}
 }
