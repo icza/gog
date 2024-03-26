@@ -98,6 +98,8 @@ func Third[T any](_, _ any, third T, _ ...any) T {
 // For example:
 //
 //	hostVal := Coalesce(hostName, os.Getenv("HOST"), "localhost")
+//
+// Note: the same functionality has been added to Go 1.22 in cmp.Or()
 func Coalesce[T comparable](values ...T) (v T) {
 	var zero T
 	for _, v = range values {
