@@ -42,3 +42,16 @@ func Filter[S ~[]E, E any](vals S, f func(v E) bool) S {
 	}
 	return out
 }
+
+// Index "safely" indexes a slice.
+// If the index is invalid (out of range) for the given slice, the (first) def is returned.
+// If def is not specified, the zero value of E is returned.
+func Index[E any](vals []E, idx int, def ...E) (result E) {
+	if idx >= 0 && idx < len(vals) {
+		return vals[idx]
+	}
+	if len(def) > 0 {
+		return def[0]
+	}
+	return
+}
