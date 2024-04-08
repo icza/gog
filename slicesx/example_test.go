@@ -40,9 +40,14 @@ func Example() {
 	adults := Filter(persons, func(p Person) bool { return p.Age >= 18 })
 	fmt.Println("Adults:", adults)
 
+	// Safely index:
+	indexResult := Index(persons, 100, Person{9, "Default", 99})
+	fmt.Println("Index result:", indexResult)
+
 	// Output:
 	// Names: [Bob Alice Joe]
 	// ID -> Person map: map[1:{1 Bob 12} 2:{2 Alice 23} 3:{3 Joe 23}]
 	// Age -> []Person map: map[12:[{1 Bob 12}] 23:[{2 Alice 23} {3 Joe 23}]]
 	// Adults: [{2 Alice 23} {3 Joe 23}]
+	// Index result: {9 Default 99}
 }
