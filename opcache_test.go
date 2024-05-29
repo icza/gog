@@ -73,7 +73,7 @@ func TestOpCacheError(t *testing.T) {
 	cfg := OpCacheConfig{
 		ResultExpiration:      expiration,
 		ResultGraceExpiration: expiration,
-		ErrorExpiration: func(err error) (discard bool, expiration *time.Duration, graceExpiration *time.Duration) {
+		ErrorExpiration: func(err error) (discard bool, expiration, graceExpiration *time.Duration) {
 			if errors.Is(err, errToDiscard) {
 				return true, nil, nil
 			}
