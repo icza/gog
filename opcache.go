@@ -40,8 +40,9 @@ type OpCacheConfig struct {
 
 	// ErrorExpiration is an optional function.
 	// If provided, it will be called for non-nil operation errors.
-	// If it returns discard=true, the error result will not be cached.
-	// Non-nil returned expirations override the default ResultExpiration and ResultGraceExpiration.
+	// Return discard=true if you do not want to cache an error result.
+	// If expiration or graceExpiration is provided (non-nil), they will
+	// override the cache expiration for the given error result
 	//
 	// If provided, this function is only called once for the result error of a single operation execution
 	// (regardless of how many times it is accessed from the OpCache).
