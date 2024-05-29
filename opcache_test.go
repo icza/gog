@@ -17,7 +17,7 @@ func TestOpCache(t *testing.T) {
 
 	resultCh := make(chan int)
 	go func() {
-		for i := 1; ; i++ {
+		for i := 1; i < 5; i++ {
 			resultCh <- i
 		}
 	}()
@@ -88,13 +88,13 @@ func TestOpCacheError(t *testing.T) {
 
 	resultCh := make(chan int)
 	go func() {
-		for i := 1; ; i++ {
+		for i := 1; i < 9; i++ {
 			resultCh <- i
 		}
 	}()
 	resultErrCh := make(chan error)
 	go func() {
-		for i := 1; ; i++ {
+		for i := 1; i < 9; i++ {
 			switch i {
 			case 2, 3:
 				resultErrCh <- errNotSpecial
