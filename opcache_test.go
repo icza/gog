@@ -42,7 +42,7 @@ func TestOpCache(t *testing.T) {
 		{"6: invalid, operation() called", 2 * expiration, "1", 4, nil},
 	}
 
-	for i, c := range cases {
+	for _, c := range cases {
 		time.Sleep(c.delay)
 
 		result, err := opc.Get(
@@ -53,7 +53,7 @@ func TestOpCache(t *testing.T) {
 		)
 
 		if result != c.result || err != c.resultErr {
-			t.Errorf("[%d] Expected (%v, %v), got (%v, %v)", i, c.result, c.resultErr, result, err)
+			t.Errorf("[%s] Expected (%v, %v), got (%v, %v)", c.name, c.result, c.resultErr, result, err)
 		}
 	}
 }
@@ -133,7 +133,7 @@ func TestOpCacheError(t *testing.T) {
 		{"11: invalid, operation() called", 3 * expShort / 2, "4", 8, errShortCache},
 	}
 
-	for i, c := range cases {
+	for _, c := range cases {
 		time.Sleep(c.delay)
 
 		result, err := opc.Get(
@@ -144,7 +144,7 @@ func TestOpCacheError(t *testing.T) {
 		)
 
 		if result != c.result || err != c.resultErr {
-			t.Errorf("[%d] Expected (%v, %v), got (%v, %v)", i, c.result, c.resultErr, result, err)
+			t.Errorf("[%s] Expected (%v, %v), got (%v, %v)", c.name, c.result, c.resultErr, result, err)
 		}
 	}
 }
