@@ -37,6 +37,15 @@ type OpCacheConfig struct {
 	// Tip: if this field is 0, grace period and thus background
 	// op execution will be disabled.
 	ResultGraceExpiration time.Duration
+
+	// ErrorExpiration is an optional function.
+	// If provided, it will be called for non-nil operation errors.
+	// If it returns discard=true, the error result will not be cached.
+	// Non-nil returned expirations override the default ResultExpiration and ResultGraceExpiration.
+	//
+	// If provided, this function is only called once for the result error of a single operation execution
+	// (regardless of how many times it is accessed from the OpCache).
+	ErrorExpiration func(err error) (discard bool, expiration, graceExpiration *time.Duration)
 }
 
 // OpCache implements a general value cache.
@@ -78,13 +87,11 @@ func (oc *OpCache[T]) setCachedOpResult(key string, opResults *opResult[T]) {
 
 // Evict checks all cached entries, and removes invalid ones.
 func (oc *OpCache[T]) Evict() {
-	expiration := oc.cfg.ResultExpiration + oc.cfg.ResultGraceExpiration
-
 	oc.keyResultsMu.Lock()
 	defer oc.keyResultsMu.Unlock()
 
 	for key, opResult := range oc.keyResults {
-		if !opResult.valid(expiration) {
+		if !opResult.graceValid() { // Delete if not even grace-valid
 			delete(oc.keyResults, key)
 		}
 	}
@@ -100,7 +107,7 @@ func (oc *OpCache[T]) Evict() {
 // Care is taken to only launch a single background worker to refresh the cache even if
 // Get() is called multiple times with the same key before the cache can be refreshed.
 //
-// Else result is either not cached or we're past the grace period:
+// Else result is either not cached or we're past even the grace period:
 // execOp() is executed, the function waits for its return values, the result is cached,
 // and then the fresh result is returned.
 func (oc *OpCache[T]) Get(
@@ -111,15 +118,34 @@ func (oc *OpCache[T]) Get(
 
 	cachedResult := oc.getCachedOpResult(key)
 
-	if cachedResult.valid(oc.cfg.ResultExpiration) {
+	if cachedResult.valid() {
 		return cachedResult.result, cachedResult.resultErr
 	}
 
-	if oc.cfg.ResultGraceExpiration <= 0 || !cachedResult.valid(oc.cfg.ResultExpiration+oc.cfg.ResultGraceExpiration) {
-		// Not valid and not even within grace period: query and cache unconditionally:
-		result, err := execOp()
-		oc.setCachedOpResult(key, newOpResult(result, err))
-		return result, err
+	// This function executes execOp(), caches the result according to the configuration, and returns it
+	execOpAndCache := func() (result T, resultErr error) {
+		result, resultErr = execOp()
+		expiration, graceExpiration := oc.cfg.ResultExpiration, oc.cfg.ResultGraceExpiration
+		if resultErr != nil && oc.cfg.ErrorExpiration != nil {
+			discard, exp, graceExp := oc.cfg.ErrorExpiration(resultErr)
+			if discard {
+				// This error result is not to be cached at all, just return:
+				return
+			}
+			if exp != nil {
+				expiration = *exp
+			}
+			if graceExp != nil {
+				graceExpiration = *graceExp
+			}
+		}
+		oc.setCachedOpResult(key, newOpResult(result, resultErr, expiration, graceExpiration))
+		return
+	}
+
+	if !cachedResult.graceValid() {
+		// Not valid and not even within grace period: query, cache and return:
+		return execOpAndCache()
 	}
 
 	// Cached result is within grace period, we can use it:
@@ -143,14 +169,12 @@ func (oc *OpCache[T]) Get(
 		cachedResult.reloadMu.Unlock()
 		return
 	}
-	cachedResult.reloading = true // We'll be the one doing it
+	cachedResult.reloading = true // We'll be the one to do it
 	cachedResult.reloadMu.Unlock()
 
-	// reload in new goroutine
-	// Note: must use function literal, else the function param (execOp()) would be evaluated (called) in this goroutine!
-	go func() {
-		oc.setCachedOpResult(key, newOpResult(execOp()))
-	}()
+	// reload in new goroutine.
+	// Note: we're not using the return values, we're returning the cached (grace-valid) values.
+	go execOpAndCache()
 
 	return
 }
@@ -172,7 +196,7 @@ func transformKey(key string) string {
 
 // opResult holds the result of an operation.
 type opResult[T any] struct {
-	created time.Time
+	expiresAt, graceExpiresAt time.Time
 
 	result    T // If an op has multiple results, this should be a slice (e.g. []any)
 	resultErr error
@@ -182,15 +206,22 @@ type opResult[T any] struct {
 }
 
 // newOpResult creates a new OpResult.
-func newOpResult[T any](result T, resultErr error) *opResult[T] {
+func newOpResult[T any](result T, resultErr error, expiration, graceExpiration time.Duration) *opResult[T] {
+	now := time.Now()
 	return &opResult[T]{
-		created:   time.Now(),
-		result:    result,
-		resultErr: resultErr,
+		expiresAt:      now.Add(expiration),
+		graceExpiresAt: now.Add(expiration + graceExpiration),
+		result:         result,
+		resultErr:      resultErr,
 	}
 }
 
 // valid tells if the result is valid.
-func (opr *opResult[T]) valid(expiration time.Duration) bool {
-	return opr != nil && time.Since(opr.created) < expiration
+func (opr *opResult[T]) valid() bool {
+	return opr != nil && time.Now().Before(opr.expiresAt)
+}
+
+// graceValid tells if the result is "grace-valid" (valid within the grace expiration beyond the normal expiration).
+func (opr *opResult[T]) graceValid() bool {
+	return opr != nil && time.Now().Before(opr.graceExpiresAt)
 }
