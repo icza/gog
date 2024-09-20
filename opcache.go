@@ -208,7 +208,7 @@ func (oc *OpCache[T]) MultiGet(
 	execMultiOp func(keyIndices []int) (results []T, errs []error),
 ) (results []T, resultErrs []error) {
 
-	// Let's "detach" keys slice from the caller: make our own copy in which we may also modify them (transform):
+	// "Detach" keys slice from the caller: make our own copy in which we may also modify them (transform):
 	keys = slices.Clone(keys)
 
 	results = make([]T, len(keys))
