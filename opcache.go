@@ -1,33 +1,11 @@
 package gog
 
 import (
-	"context"
 	"crypto/sha1"
 	"slices"
 	"sync"
 	"time"
 )
-
-// RunEvictor should be run as a goroutine, it evicts expired cache entries from the listed OpCaches.
-// Returns only if ctx is cancelled.
-//
-// OpCache has Evict() method, so any OpCache can be listed (does not depend on the type parameter).
-func RunEvictor(ctx context.Context, evictorPeriod time.Duration, opCaches ...interface{ Evict() }) {
-	ticker := time.NewTicker(evictorPeriod)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-		}
-
-		for _, oc := range opCaches {
-			oc.Evict()
-		}
-	}
-}
 
 // OpCacheConfig holds configuration options for OpCache.
 type OpCacheConfig struct {
@@ -48,10 +26,16 @@ type OpCacheConfig struct {
 	// If provided, this function is only called once for the result error of a single operation execution
 	// (regardless of how many times it is accessed from the OpCache).
 	ErrorExpiration func(err error) (discard bool, expiration, graceExpiration *time.Duration)
+
+	// AutoEvictPeriodMinutes tells if the opcache should be added to the internal auto-evictor
+	// and evicted using this period (in minutes). Removal is currently not supported.
+	// If this is 0, the op cache is not added to the internal auto-evictor, and manual eviction
+	// should be taken care of with e.g. using the RunEvictor() function.
+	AutoEvictPeriodMinutes int
 }
 
-// OpCache implements a general value cache.
-// It can be used to cache results of arbitrary operations.
+// OpCache implements a general value cache. It can be used to cache results of arbitrary operations.
+//
 // Cached values are tied to a string key that should be derived from the operation's arguments.
 // Cached values have an expiration time and also a grace period during which the cached value
 // is considered usable, but getting a cached value during the grace period triggers a reload
@@ -59,6 +43,12 @@ type OpCacheConfig struct {
 //
 // Operations are captured by a function that returns a value of a certain type (T) and an error.
 // If an operation has multiple results beside the error, they must be wrapped in a struct or slice.
+//
+// If multiple input arguments are available, operations can often be executed more efficiently if all inputs
+// are handed as a batch than executing the operation for each input argument individually.
+// A tipical example is loading records by ID from a database: running a query with a condition like "id=?"
+// for each ID individually can be significantly slower than running a query with a condition something
+// like "id in ?". These operations can take advantage of the MultiGet() method.
 type OpCache[T any] struct {
 	cfg OpCacheConfig
 
@@ -68,10 +58,16 @@ type OpCache[T any] struct {
 
 // NewOpCache creates a new OpCache.
 func NewOpCache[T any](cfg OpCacheConfig) *OpCache[T] {
-	return &OpCache[T]{
+	opCache := &OpCache[T]{
 		cfg:        cfg,
 		keyResults: map[string]*opResult[T]{},
 	}
+
+	if cfg.AutoEvictPeriodMinutes > 0 {
+		addToGlobalEvictor(opCache, cfg.AutoEvictPeriodMinutes)
+	}
+
+	return opCache
 }
 
 func (oc *OpCache[T]) getCachedOpResult(key string) *opResult[T] {
