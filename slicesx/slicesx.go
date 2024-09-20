@@ -55,3 +55,15 @@ func Index[E any](vals []E, idx int, def ...E) (result E) {
 	}
 	return
 }
+
+// SelectByIndices selects elements from a slice specified by their indices.
+// indices must hold valid indices, else a runtime panic may occur.
+func SelectByIndices[S ~[]E, E any](vals S, indices []int) S {
+	result := make(S, len(indices))
+
+	for i, idx := range indices {
+		result[i] = vals[idx]
+	}
+
+	return result
+}

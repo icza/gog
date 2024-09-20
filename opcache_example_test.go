@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/icza/gog"
+	"github.com/icza/gog/slicesx"
 )
 
 // This example demonstrates how to use OpCache to cache the results
@@ -27,7 +28,7 @@ func ExampleOpCache() {
 	// Function to use which utilizes getPointCache (has identical signature to that of GetPoint):
 	GetPointFast := func(x, y int) (*Point, error) {
 		return getPointCache.Get(
-			fmt.Sprint(x, y), // Key constructed from all params
+			fmt.Sprint(x, y), // Key constructed from all arguments
 			func() (*Point, error) { return GetPoint(x, y) },
 		)
 	}
@@ -72,7 +73,7 @@ func ExampleOpCache_multi_return() {
 	// Function to use which utilizes getPointCache (has identical signature to that of GetPoint):
 	GetPointFast := func(x, y int) (*Point, int, error) {
 		mr, err := getPointCache.Get(
-			fmt.Sprint(x, y), // Key constructed from all params
+			fmt.Sprint(x, y), // Key constructed from all arguments
 			func() (multiResults, error) {
 				p, n, err := GetPoint(x, y)
 				return multiResults{p, n}, err // packing multiple results
@@ -127,7 +128,7 @@ func ExampleOpCache_MultiGet() {
 	// Function to use which utilizes calcCache (has identical signature to that of Calc):
 	CalcFast := func(x int) (CalcResult, error) {
 		return calcCache.Get(
-			fmt.Sprint(x), // Key constructed from all params
+			fmt.Sprint(x), // Key constructed from all arguments
 			func() (CalcResult, error) { return Calc(x) },
 		)
 	}
@@ -136,16 +137,12 @@ func ExampleOpCache_MultiGet() {
 	MultiCalcFast := func(xs []int) ([]CalcResult, []error) {
 		keys := make([]string, len(xs))
 		for i, x := range xs {
-			keys[i] = fmt.Sprint(x) // Key constructed from all params
+			keys[i] = fmt.Sprint(x) // Key constructed from all arguments
 		}
 		return calcCache.MultiGet(
 			keys,
 			func(keyIndices []int) ([]CalcResult, []error) {
-				xs2 := make([]int, len(keyIndices))
-				for i, keyIdx := range keyIndices {
-					xs2[i] = xs[keyIdx]
-				}
-				return MultiCalc(xs2)
+				return MultiCalc(slicesx.SelectByIndices(xs, keyIndices))
 			},
 		)
 	}

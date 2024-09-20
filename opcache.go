@@ -199,8 +199,7 @@ func (oc *OpCache[T]) Get(
 // and elements matching to keys designated by keyIndices! Failure to do so is undefined behavior,
 // may even result in runtime panic!
 //
-// The implementation may alter key values (by transforming / simplifying them).
-// Since execMultiOp() may be called later, in the background, the caller must not modify the keys slice.
+// Tip: slicesx.SelectByIndices() may come handy when implementing execMultiOp.
 func (oc *OpCache[T]) MultiGet(
 	keys []string,
 	execMultiOp func(keyIndices []int) (results []T, errs []error),
