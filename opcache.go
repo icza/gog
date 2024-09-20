@@ -47,8 +47,10 @@ type OpCacheConfig struct {
 // If multiple input arguments are available, operations can often be executed more efficiently if all inputs
 // are handed as a batch than executing the operation for each input argument individually.
 // A tipical example is loading records by ID from a database: running a query with a condition like "id=?"
-// for each ID individually can be significantly slower than running a query with a condition something
-// like "id in ?". These operations can take advantage of the MultiGet() method.
+// for each ID individually can be significantly slower than running a single query with a condition like
+// "id in ?". These operations can take advantage of the MultiGet() method. MultiGet() will ensure that
+// only a subset of the arguments is use in the multi-operation execution if some of them are already cached,
+// and Get() methods will also take advantage of entries cached by MultiGet().
 type OpCache[T any] struct {
 	cfg OpCacheConfig
 
