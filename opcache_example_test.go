@@ -63,23 +63,18 @@ func ExampleOpCache_multi_return() {
 		return &Point{X: x, Y: 2 * x, Counter: counter}, counter * 10, fmt.Errorf("test_error_%d", counter)
 	}
 
-	// this type wraps the multiple return types of GetPoint():
-	type multiResults struct {
-		p *Point
-		n int
-	}
-	var getPointCache = gog.NewOpCache[multiResults](gog.OpCacheConfig{ResultExpiration: 100 * time.Millisecond})
+	var getPointCache = gog.NewOpCache[gog.Struct2[*Point, int]](gog.OpCacheConfig{ResultExpiration: 100 * time.Millisecond})
 
 	// Function to use which utilizes getPointCache (has identical signature to that of GetPoint):
 	GetPointFast := func(x, y int) (*Point, int, error) {
 		mr, err := getPointCache.Get(
 			fmt.Sprint(x, y), // Key constructed from all arguments
-			func() (multiResults, error) {
+			func() (gog.Struct2[*Point, int], error) {
 				p, n, err := GetPoint(x, y)
-				return multiResults{p, n}, err // packing multiple results
+				return gog.Struct2Of(p, n), err // packing multiple results
 			},
 		)
-		return mr.p, mr.n, err // Unpacking multiple results
+		return mr.V1, mr.V2, err // Unpacking multiple results
 	}
 
 	p, n, err := GetPointFast(1, 2) // This will call GetPoint()
