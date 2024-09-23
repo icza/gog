@@ -13,7 +13,7 @@ func TestOpCache(t *testing.T) {
 		ResultGraceExpiration: expiration,
 	}
 
-	opc := NewOpCache[int](cfg)
+	opc := NewOpCache[string, int](cfg)
 
 	resultCh := make(chan int)
 	go func() {
@@ -84,7 +84,7 @@ func TestOpCacheError(t *testing.T) {
 		},
 	}
 
-	opc := NewOpCache[int](cfg)
+	opc := NewOpCache[string, int](cfg)
 
 	resultCh := make(chan int)
 	go func() {

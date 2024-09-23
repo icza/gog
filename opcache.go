@@ -1,8 +1,6 @@
 package gog
 
 import (
-	"crypto/sha1"
-	"slices"
 	"sync"
 	"time"
 )
@@ -39,33 +37,38 @@ type OpCacheConfig struct {
 
 // OpCache implements a general value cache. It can be used to cache results of arbitrary operations.
 //
-// Cached values are tied to a string key that should be derived from the operation's arguments.
+// Cached values are tied to a key that should be derived from the operation's arguments.
+// If the operation has multiple arguments, a wrapper struct is ideal (such as Struct2, Struct3 etc.),
+// or fmt.Sprint() will also do as an alternative (with string being the key type).
+//
 // Cached values have an expiration time and also a grace period during which the cached value
 // is considered usable, but getting a cached value during the grace period triggers a reload
 // that will happen in the background (the cached value is returned immediately, without waiting).
 //
 // Operations are captured by a function that returns a value of a certain type (T) and an error.
-// If an operation has multiple results beside the error, they must be wrapped in a struct or slice.
+// If an operation has multiple results beside the error, they must be wrapped in a composite type
+// (like a struct or slice).
 //
-// If multiple input arguments are available, operations can often be executed more efficiently if all inputs
-// are handed as a batch than executing the operation for each input argument individually.
+// If multiple input arguments are available (for multiple operation execution),
+// operations can often be executed more efficiently if all inputs are handed as a batch
+// than executing the operation for each input argument individually.
 // A tipical example is loading records by ID from a database: running a query with a condition like "id=?"
 // for each ID individually can be significantly slower than running a single query with a condition like
 // "id in ?". These operations can take advantage of the MultiGet() method. MultiGet() will ensure that
-// only a subset of the arguments is use in the multi-operation execution if some of them are already cached,
-// and Get() methods will also take advantage of entries cached by MultiGet().
-type OpCache[T any] struct {
+// only the minimal required subset of the arguments is passed in the multi-operation execution
+// if some of them are already cached, and Get() methods will also take advantage of entries cached by MultiGet().
+type OpCache[K comparable, T any] struct {
 	cfg OpCacheConfig
 
 	keyResultsMu sync.RWMutex
-	keyResults   map[string]*opResult[T]
+	keyResults   map[K]*opResult[T]
 }
 
 // NewOpCache creates a new OpCache.
-func NewOpCache[T any](cfg OpCacheConfig) *OpCache[T] {
-	opCache := &OpCache[T]{
+func NewOpCache[K comparable, T any](cfg OpCacheConfig) *OpCache[K, T] {
+	opCache := &OpCache[K, T]{
 		cfg:        cfg,
-		keyResults: map[string]*opResult[T]{},
+		keyResults: map[K]*opResult[T]{},
 	}
 
 	if cfg.AutoEvictPeriodMinutes >= 0 {
@@ -79,21 +82,21 @@ func NewOpCache[T any](cfg OpCacheConfig) *OpCache[T] {
 	return opCache
 }
 
-func (oc *OpCache[T]) getCachedOpResult(key string) *opResult[T] {
+func (oc *OpCache[K, T]) getCachedOpResult(key K) *opResult[T] {
 	oc.keyResultsMu.RLock()
 	defer oc.keyResultsMu.RUnlock()
 
 	return oc.keyResults[key]
 }
 
-func (oc *OpCache[T]) setCachedOpResult(key string, opResults *opResult[T]) {
+func (oc *OpCache[K, T]) setCachedOpResult(key K, opResults *opResult[T]) {
 	oc.keyResultsMu.Lock()
 	oc.keyResults[key] = opResults
 	oc.keyResultsMu.Unlock()
 }
 
 // Evict checks all cached entries, and removes invalid ones.
-func (oc *OpCache[T]) Evict() {
+func (oc *OpCache[K, T]) Evict() {
 	oc.keyResultsMu.Lock()
 	defer oc.keyResultsMu.Unlock()
 
@@ -117,11 +120,10 @@ func (oc *OpCache[T]) Evict() {
 // Else result is either not cached or we're past even the grace period:
 // execOp() is executed, the function waits for its return values, the result is cached,
 // and then the fresh result is returned.
-func (oc *OpCache[T]) Get(
-	key string,
+func (oc *OpCache[K, T]) Get(
+	key K,
 	execOp func() (result T, err error),
 ) (result T, resultErr error) {
-	key = transformKey(key)
 
 	cachedResult := oc.getCachedOpResult(key)
 
@@ -207,13 +209,10 @@ func (oc *OpCache[T]) Get(
 // may even result in runtime panic!
 //
 // Tip: slicesx.SelectByIndices() may come handy when implementing execMultiOp.
-func (oc *OpCache[T]) MultiGet(
-	keys []string,
+func (oc *OpCache[K, T]) MultiGet(
+	keys []K,
 	execMultiOp func(keyIndices []int) (results []T, errs []error),
 ) (results []T, resultErrs []error) {
-
-	// "Detach" keys slice from the caller: make our own copy in which we may also modify them (transform):
-	keys = slices.Clone(keys)
 
 	results = make([]T, len(keys))
 	resultErrs = make([]error, len(keys))
@@ -225,8 +224,6 @@ func (oc *OpCache[T]) MultiGet(
 	)
 
 	for keyIdx, key := range keys {
-		keys[keyIdx] = transformKey(key)
-
 		cachedResult := oc.getCachedOpResult(key)
 
 		switch {
@@ -312,21 +309,6 @@ func (oc *OpCache[T]) MultiGet(
 	}
 
 	return
-}
-
-// transformKey may arbitrarily transform long keys to short ones,
-// saving time when storing them in the internal map.
-//
-// Saving space is not the only aspect though as shortening requires computation.
-func transformKey(key string) string {
-	// Hash key using SHA-1 if it's very long
-	// to avoid storing long keys and also having to compare long keys in map lookups.
-	if len(key) > 100 { // Arbitrary limit, a compromize between space-time (SHA-1 byte size is 20)
-		checksum := sha1.Sum([]byte(key))
-		key = string(checksum[:]) // A valid UTF-8 string is not required
-	}
-
-	return key
 }
 
 // opResult holds the result of an operation.
