@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const DefaultEvictPeriodMinutes = 15
+
 // OpCacheConfig holds configuration options for OpCache.
 type OpCacheConfig struct {
 	// Operation results are valid for this long after creation.
@@ -27,9 +29,10 @@ type OpCacheConfig struct {
 	// (regardless of how many times it is accessed from the OpCache).
 	ErrorExpiration func(err error) (discard bool, expiration, graceExpiration *time.Duration)
 
-	// AutoEvictPeriodMinutes tells if the opcache should be added to the internal auto-evictor
-	// and evicted using this period (in minutes). Removal is currently not supported.
-	// If this is 0, the op cache is not added to the internal auto-evictor, and manual eviction
+	// AutoEvictPeriodMinutes tells how frequently should expired entries be checked and evicted from the cache.
+	// If 0, DefaultEvictPeriodMinutes will be used. Removal is currently not supported.
+	//
+	// If a negative value is given, the op cache is not added to the internal auto-evictor, and manual eviction
 	// should be taken care of with e.g. using the RunEvictor() function.
 	AutoEvictPeriodMinutes int
 }
@@ -65,8 +68,12 @@ func NewOpCache[T any](cfg OpCacheConfig) *OpCache[T] {
 		keyResults: map[string]*opResult[T]{},
 	}
 
-	if cfg.AutoEvictPeriodMinutes > 0 {
-		addToGlobalEvictor(opCache, cfg.AutoEvictPeriodMinutes)
+	if cfg.AutoEvictPeriodMinutes >= 0 {
+		epMins := cfg.AutoEvictPeriodMinutes
+		if epMins == 0 {
+			epMins = DefaultEvictPeriodMinutes
+		}
+		addToGlobalEvictor(opCache, epMins)
 	}
 
 	return opCache
