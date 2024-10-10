@@ -16,6 +16,16 @@ func If[T any](cond bool, vtrue, vfalse T) T {
 	return vfalse
 }
 
+// IfFunc returns the return value of ftrue if cond is true, the return value of ffalse otherwise.
+//
+// In contrast to [If], this can be used to deferred, on-demand evaluation of values depending on the condition.
+func IfFunc[T any](cond bool, ftrue func() T, ffalse func() T) T {
+	if cond {
+		return ftrue()
+	}
+	return ffalse()
+}
+
 // Ptr returns a pointer to the passed value.
 //
 // Useful when you have a value and need a pointer, e.g.:
@@ -99,7 +109,7 @@ func Third[T any](_, _ any, third T, _ ...any) T {
 //
 //	hostVal := Coalesce(hostName, os.Getenv("HOST"), "localhost")
 //
-// Note: the same functionality has been added to Go 1.22 in cmp.Or()
+// Note: the same functionality has been added in Go 1.22 as cmp.Or()
 func Coalesce[T comparable](values ...T) (v T) {
 	var zero T
 	for _, v = range values {

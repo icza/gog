@@ -10,11 +10,11 @@ func TestIf(t *testing.T) {
 		i1, i2 := 1, 2
 		exp, got := i1, If(true, i1, i2)
 		if got != exp {
-			t.Errorf("[int] Expected %d, got: %d", exp, got)
+			t.Errorf("[int-1] Expected %d, got: %d", exp, got)
 		}
 		exp, got = i2, If(false, i1, i2)
 		if got != exp {
-			t.Errorf("[int] Expected %d, got: %d", exp, got)
+			t.Errorf("[int-2] Expected %d, got: %d", exp, got)
 		}
 	}
 
@@ -22,12 +22,41 @@ func TestIf(t *testing.T) {
 		s1, s2 := "first", "second"
 		exp, got := s1, If(true, s1, s2)
 		if got != exp {
-			t.Errorf("[string] Expected %s, got: %s", exp, got)
+			t.Errorf("[string-1] Expected %s, got: %s", exp, got)
 		}
 		exp, got = s2, If(false, s1, s2)
 		if got != exp {
-			t.Errorf("[string] Expected %s, got: %s", exp, got)
+			t.Errorf("[string-2] Expected %s, got: %s", exp, got)
 		}
+	}
+}
+
+func TestIfFunc(t *testing.T) {
+	count1, count2 := 0, 0
+	f1, f2 := func() int { count1++; return 1 }, func() int { count2++; return 2 }
+
+	exp, got := 1, IfFunc(true, f1, f2)
+	if got != exp {
+		t.Errorf("[int-1] Expected %d, got: %d", exp, got)
+	}
+	// Check deferred, on-demand calls:
+	if expCount1 := 1; count1 != expCount1 {
+		t.Errorf("[int-1] Expected count1 %d, got: %d", expCount1, count1)
+	}
+	if expCount2 := 0; count2 != expCount2 {
+		t.Errorf("[int-1] Expected count2 %d, got: %d", expCount2, count2)
+	}
+
+	exp, got = 2, IfFunc(false, f1, f2)
+	if got != exp {
+		t.Errorf("[int-2] Expected %d, got: %d", exp, got)
+	}
+	// Check deferred, on-demand calls:
+	if expCount1 := 1; count1 != expCount1 {
+		t.Errorf("[int-1] Expected count1 %d, got: %d", expCount1, count1)
+	}
+	if expCount2 := 1; count2 != expCount2 {
+		t.Errorf("[int-1] Expected count2 %d, got: %d", expCount2, count2)
 	}
 }
 
