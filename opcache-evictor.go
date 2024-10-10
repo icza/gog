@@ -7,7 +7,7 @@ import (
 )
 
 // Evictable defines a single Evict() method.
-// OpCache has Evict().
+// [OpCache] has Evict().
 type Evictable interface {
 	Evict()
 }
