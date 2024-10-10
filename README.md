@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/icza/gog.svg)](https://pkg.go.dev/github.com/icza/gog)
 
 **WARNING! This package is now deprecated and archived!
-It has been merged with [github.com/icza/gox](https://github.com/icza/gox). Import and use `gox`!**
+It has been merged into [github.com/icza/gox](https://github.com/icza/gox). Import and use `gox`!**
 
 ---
 
