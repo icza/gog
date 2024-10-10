@@ -15,7 +15,7 @@ type Evictable interface {
 // RunEvictor should be run as a goroutine, it evicts expired cache entries from the listed OpCaches.
 // Returns only if ctx is cancelled.
 //
-// OpCache has Evict() method, so any OpCache can be listed (does not depend on the type parameter).
+// [OpCache] has Evict() method, so any OpCache can be listed (does not depend on the type parameter).
 func RunEvictor(ctx context.Context, evictorPeriod time.Duration, opCaches ...Evictable) {
 	ticker := time.NewTicker(evictorPeriod)
 	defer ticker.Stop()

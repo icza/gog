@@ -7,7 +7,7 @@ import (
 
 const DefaultEvictPeriodMinutes = 15
 
-// OpCacheConfig holds configuration options for OpCache.
+// OpCacheConfig holds configuration options for an [OpCache].
 type OpCacheConfig struct {
 	// Operation results are valid for this long after creation.
 	ResultExpiration time.Duration
@@ -38,7 +38,7 @@ type OpCacheConfig struct {
 // OpCache implements a general value cache. It can be used to cache results of arbitrary operations.
 //
 // Cached values are tied to a key that should be derived from the operation's arguments.
-// If the operation has multiple arguments, a wrapper struct is ideal (such as Struct2, Struct3 etc.),
+// If the operation has multiple arguments, a wrapper struct is ideal (such as [Struct2], [Struct3] etc.),
 // or fmt.Sprint() will also do as an alternative (with string being the key type).
 //
 // Cached values have an expiration time and also a grace period during which the cached value
@@ -54,9 +54,9 @@ type OpCacheConfig struct {
 // than executing the operation for each input argument individually.
 // A tipical example is loading records by ID from a database: running a query with a condition like "id=?"
 // for each ID individually can be significantly slower than running a single query with a condition like
-// "id in ?". These operations can take advantage of the MultiGet() method. MultiGet() will ensure that
+// "id in ?". These operations can take advantage of the [OpCache.MultiGet] method. MultiGet will ensure that
 // only the minimal required subset of the arguments is passed in the multi-operation execution
-// if some of them are already cached, and Get() methods will also take advantage of entries cached by MultiGet().
+// if some of them are already cached, and [OpCache.Get] methods will also take advantage of entries cached by MultiGet.
 type OpCache[K comparable, T any] struct {
 	cfg OpCacheConfig
 
@@ -115,7 +115,7 @@ func (oc *OpCache[K, T]) Evict() {
 // execOp() is called in the background to refresh the cache,
 // and the cached result is returned immediately.
 // Care is taken to only launch a single background worker to refresh the cache even if
-// Get() or MultiGet() is called multiple times with the same key before the cache can be refreshed.
+// Get() or [OpCache.MultiGet] is called multiple times with the same key before the cache can be refreshed.
 //
 // Else result is either not cached or we're past even the grace period:
 // execOp() is executed, the function waits for its return values, the result is cached,
@@ -201,14 +201,14 @@ func (oc *OpCache[K, T]) Get(
 //
 // If there are results that are returned because they are cached but not valid but we're within the grace period,
 // execMultiOp() is called in the background to refresh them. Care is taken to only launch a single background worker
-// to refresh each such entry even if Get() or MultiGet() is called multiple times with the same key(s)
+// to refresh each such entry even if [OpCache.Get] or MultiGet() is called multiple times with the same key(s)
 // before the cache can be refreshed.
 //
 // execMultiOp must return results and errs slices with identical size to that of its keyIndices argument,
 // and elements matching to keys designated by keyIndices! Failure to do so is undefined behavior,
 // may even result in runtime panic!
 //
-// Tip: slicesx.SelectByIndices() may come handy when implementing execMultiOp.
+// Tip: [github.com/icza/gog/slicesx.SelectByIndices] may come handy when implementing execMultiOp.
 func (oc *OpCache[K, T]) MultiGet(
 	keys []K,
 	execMultiOp func(keyIndices []int) (results []T, errs []error),
